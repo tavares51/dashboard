@@ -1,0 +1,7 @@
+streamlit>=1.32.0
+pandas>=2.2.0
+plotly>=5.20.0
+pyodbc>=5.0.1
+python-dotenv>=1.0.1
+openpyxl>=3.1.2        # para ler/gravar Excel se necessário
+numpy>=1.26.0          # dependência para pandas/plotly
