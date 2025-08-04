@@ -94,7 +94,7 @@ def run_dashboard():
     )
     
     data_atual = datetime.now().strftime("%d/%m/%Y")
-    st.title(f"Controle Estoque Biomax - {data_atual}")
+    st.title(f"Controle Estoque Biomax")
 
     df = carregar_dados()
     df_filtrado = aplicar_filtros_topo(df)
