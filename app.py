@@ -78,7 +78,7 @@ def run_dashboard():
         st.warning("Nenhum dado encontrado para os filtros selecionados.")
         return
 
-    col1, col2, col3 = st.columns([0.5, 0.5, 0.3])
+    col1, col2, col3 = st.columns([0.3, 0.4, 0.3])
 
     with col1:
         fig_produto = grafico_barras_produto(df_filtrado, top_n=5)
