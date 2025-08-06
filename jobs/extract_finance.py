@@ -29,7 +29,7 @@ QUERY = """
         , NFI_VALOR_TOTAL_PRODUTO
         , NFI_VALOR_TOTAL_PRODUTO_BRUTO
         , NFI_VALOR_TOTAL_NOTA
-    from NOTA_FISCAL where NFI_NUMERO is not null
+    from NOTA_FISCAL where NFI_TIPO = 0
         order by NFI_DATA_EMISSAO desc
 """
 
