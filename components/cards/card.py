@@ -28,6 +28,6 @@ def card_html(title, content, title_size="12px", content_size="16px"):
 
 
 def card(title, content):
-    with st.container(border=True):
+    with st.container(border=False):
         st.write(title)
         st.subheader(content)

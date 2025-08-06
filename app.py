@@ -4,7 +4,7 @@ from datetime import datetime, timedelta
 from data.gold.estoque.data_gold import obter_dados_filtrados
 from data.gold.financeiro.data_finance_gold import obter_dados_filtrados as obter_dados_financeiro_filtrados
 from components.charts.bar import grafico_entrada_saida_por_data, grafico_produtor, grafico_barras_produto, grafico_financeiro_por_data
-from components.tables.table import exibir_tabela_resumida
+from components.tables.table import exibir_tabela_resumida, exibir_saidas
 from components.filters.filter_estoque import aplicar_filtros_topo as filtro_estoque
 from components.filters.filter_financeiro import aplicar_filtros_topo as filtro_financeiro
 from components.cards.card import card
@@ -72,13 +72,14 @@ def run_dashboard():
     df_filtrado = filtro_estoque(
         df, data_especifica, periodo, produtos, fornecedores)
 
-    df_filtro_financeiro = filtro_financeiro(df_financeiro, data_especifica, periodo, cliente)
+    df_filtro_financeiro = filtro_financeiro(
+        df_financeiro, data_especifica, periodo, cliente)
 
     if df_filtrado.empty:
         st.warning("Nenhum dado encontrado para os filtros selecionados.")
         return
 
-    col1, col2, col3 = st.columns(3)
+    col1, col2 = st.columns([0.4, 0.6])
 
     with col1:
         fig_produto = grafico_barras_produto(df_filtrado, top_n=5)
@@ -90,17 +91,15 @@ def run_dashboard():
         if fig_produtor:
             st.plotly_chart(fig_produtor, use_container_width=True)
 
-    with col3:
-        fig_data = grafico_entrada_saida_por_data(df_filtrado)
-        if fig_data:
-            st.plotly_chart(fig_data, use_container_width=True)
+    total = df_filtro_financeiro['NFI_VALOR_TOTAL_NOTA'].sum()
+    card('', f"Total Faturado: R$ {total:,.2f}")
 
     fig_data_financeiro = grafico_financeiro_por_data(df_filtro_financeiro)
     if fig_data_financeiro:
-        st.plotly_chart(fig_data_financeiro, use_container_width=True)
+        st.plotly_chart(fig_data_financeiro, use_container_width=False)
 
     exibir_tabela_resumida(df_filtrado)
-
+    exibir_saidas(df_filtro_financeiro)
 
 if __name__ == "__main__":
     run_dashboard()

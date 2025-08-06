@@ -54,11 +54,9 @@ def grafico_entrada_saida_por_data(df, dias: int = 15, data_filtro=None):
         df_tipo_dia,
         x='Data',
         y='Peso_Liquido',
-        color='TIPO',
-        height=350,
+        height=400,
         title=titulo,
-        labels={'TIPO': 'Tipo', 'Peso_Liquido': 'Peso Líquido (kg)'},
-        color_discrete_map={'Entrada': '#1f77b4', 'Saída': '#ff7f0e'}
+        labels={'TIPO': 'Tipo', 'Peso_Liquido': 'Peso Líquido (kg)'}
     )
 
     # Ajustes visuais
@@ -126,10 +124,10 @@ def grafico_produtor(df, top_n=None):
     fig.update_layout(
         xaxis_title='Peso Líquido (kg)',
         yaxis_title='Fornecedor',
-        height=max(300, 50 * len(agg_df)),
+        height=max(250, 50 * len(agg_df)),
         yaxis={'categoryorder': 'total ascending'},
         bargap=0.1,
-        margin=dict(l=200, r=20, t=50, b=50)
+        margin=dict(l=200, r=20, t=50, b=30)
     )
     fig.update_traces(texttemplate='%{text:.0f}', textposition='inside',
                       insidetextanchor='end', )
@@ -186,10 +184,10 @@ def grafico_barras_produto(df, top_n=None):
     fig.update_layout(
         xaxis_title='Peso Líquido (kg)',
         yaxis_title='Produto',
-        height=max(300, 50 * len(resumo)),  # altura dinâmica
+        height=max(250, 50 * len(resumo)),  # altura dinâmica
         yaxis={'categoryorder': 'total ascending'},
         bargap=0.1,
-        margin=dict(l=180, r=20, t=50, b=50),
+        margin=dict(l=180, r=20, t=50, b=30),
         overwrite=True
     )
 
@@ -203,94 +201,78 @@ def grafico_barras_produto(df, top_n=None):
     return fig
 
 
-def grafico_financeiro_por_data(df, dias: int = 15, data_filtro=None):
+def grafico_financeiro_por_data(
+    df: pd.DataFrame,
+    *,
+    dias: int = 15,
+    data_filtro: str | datetime | None = None,
+) -> px.bar:
     """
-    Gera um gráfico de faturamento financeiro por cliente:
-    - Se data_filtro for informada: gráfico horizontal por cliente.
-    - Caso contrário: gráfico de barras agrupadas por data e cliente.
+    Gráfico vertical de faturamento por cliente.
 
-    Parâmetros:
-        df (pd.DataFrame): DataFrame com colunas 
-            ['NFI_DATA_SAIDA', 'NFI_VALOR_TOTAL_PRODUTO', 'NFI_RAZAO']
-        dias (int): Período em dias para considerar se não houver filtro de data.
-        data_filtro (str|datetime.date, opcional): Filtra um único dia.
+    ▸ Se `data_filtro` for informado → mostra somente esse dia.
+    ▸ Caso contrário                 → considera os últimos `dias`.
+
+    Colunas obrigatórias:
+        - NFI_DATA_EMISSAO
+        - NFI_RAZAO
+        - NFI_VALOR_TOTAL_NOTA ou NFI_VALOR_TOTAL_PRODUTO
     """
-    # Garantir tipos corretos
-    df['NFI_DATA_SAIDA'] = pd.to_datetime(
-        df['NFI_DATA_SAIDA'], errors='coerce')
-    df['NFI_VALOR_TOTAL_PRODUTO'] = pd.to_numeric(
-        df['NFI_VALOR_TOTAL_PRODUTO'], errors='coerce')
+    if df.empty:
+        st.warning("DataFrame vazio.")
+        return
 
-    # Aplicar filtro por data única
+    # --- Normalização --- #
+    df = df.copy()
+    df["NFI_DATA_EMISSAO"] = pd.to_datetime(df["NFI_DATA_EMISSAO"]).dt.normalize()
+
+    valor_col = (
+        "NFI_VALOR_TOTAL_NOTA"
+        if "NFI_VALOR_TOTAL_NOTA" in df.columns
+        else "NFI_VALOR_TOTAL_PRODUTO"
+    )
+    df[valor_col] = pd.to_numeric(df[valor_col], errors="coerce").fillna(0)
+
+    titulo = "Faturamento por Cliente"
     if data_filtro:
-        data_filtro = pd.to_datetime(data_filtro).date()
-        df = df[df['NFI_DATA_SAIDA'].dt.date == data_filtro]
-        titulo = f"Faturamento por Cliente - {data_filtro.strftime('%d/%m/%Y')}"
+        data_filtro = pd.to_datetime(data_filtro).normalize()
+        df = df[df["NFI_DATA_EMISSAO"] == data_filtro]
+        
     else:
-        limite_data = datetime.now() - timedelta(days=dias)
-        df = df[df['NFI_DATA_SAIDA'] >= limite_data]
-        titulo = f"Faturamento por Cliente"
+        limite = (
+            datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
+            - timedelta(days=dias)
+        )
+        df = df[df["NFI_DATA_EMISSAO"] >= limite]
 
     if df.empty:
         st.warning("Nenhum dado encontrado para o filtro aplicado.")
-        return None
+        return
 
-    # Agrupar por data e cliente (somando tudo daquele cliente por dia)
-    df_agrupado = (
-        df.groupby([df['NFI_DATA_SAIDA'].dt.date, 'NFI_RAZAO'])[
-            'NFI_VALOR_TOTAL_PRODUTO']
+    dados = (
+        df.groupby("NFI_RAZAO", as_index=False)[valor_col]
         .sum()
-        .reset_index(name='Valor_Total')
-        .rename(columns={'NFI_DATA_SAIDA': 'Data', 'NFI_RAZAO': 'Cliente'})
+        .rename(columns={"NFI_RAZAO": "Cliente", valor_col: "Valor_Total"})
+        .sort_values("Valor_Total", ascending=False)
     )
 
-    # Se for um dia único → gráfico horizontal por cliente
-    if data_filtro:
-        df_dia = (
-            df_agrupado.groupby('Cliente')['Valor_Total']
-            .sum()
-            .reset_index()
-            .sort_values('Valor_Total', ascending=True)
-        )
-
-        fig = px.bar(
-            df_dia,
-            x='Valor_Total',
-            y='Cliente',
-            orientation='h',
-            text='Valor_Total',
-            color='Cliente',
-            title=titulo,
-            labels={'Valor_Total': 'Valor Total (R$)', 'Cliente': 'Cliente'}
-        )
-        fig.update_traces(texttemplate='R$ %{x:,.2f}', textposition='inside')
-        fig.update_layout(
-            xaxis_title='Valor Total (R$)',
-            yaxis_title='Cliente',
-            height=max(450, 50 * len(df_dia)),
-            margin=dict(l=150, r=20, t=50, b=50),
-            showlegend=True
-        )
-
-    else:
-        # Período maior → gráfico agrupado por data e cliente
-        fig = px.bar(
-            df_agrupado,
-            x='Data',
-            y='Valor_Total',
-            color='Cliente',
-            text='Valor_Total',
-            title=titulo,
-            labels={'Valor_Total': 'Valor Total (R$)', 'Cliente': 'Cliente'}
-        )
-        fig.update_traces(texttemplate='R$ %{y:,.2f}', textposition='outside')
-        fig.update_layout(
-            xaxis_title='Data',
-            yaxis_title='Valor Total (R$)',
-            xaxis_tickformat='%d/%m/%Y',
-            barmode='group',
-            height=450,
-            legend_title_text='Cliente'
-        )
+    fig = px.bar(
+        dados,
+        x="Cliente",
+        y="Valor_Total",
+        text="Valor_Total",
+        color="Cliente",
+        title=titulo,
+        labels={"Valor_Total": "Valor Total (R$)", "Cliente": "Cliente"},
+    )
+    fig.update_traces(texttemplate="R$ %{y:,.2f}", textposition="outside")
+    fig.update_layout(
+        xaxis_title="Cliente",
+        yaxis_title="Valor Total (R$)",
+        xaxis_tickangle=-15,
+        height=500,
+        margin=dict(l=0, r=0, t=50, b=0),
+        showlegend=True,
+    )
 
     return fig
