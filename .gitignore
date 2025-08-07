@@ -19,3 +19,5 @@ venv/
 ENV/
 env/
 *.env/
+
+*.bat
