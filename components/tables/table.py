@@ -18,7 +18,8 @@ def exibir_tabela_resumida(df):
     })
 
     st.subheader("Lançamentos")
-    st.dataframe(df_tabela, hide_index=True)
+    st.table(df_tabela)
+    #st.dataframe(df_tabela, hide_index=True)
 
 
 def exibir_saidas(df):
@@ -36,4 +37,5 @@ def exibir_saidas(df):
     })
 
     st.subheader("Saídas")
-    st.dataframe(df_tabela, hide_index=True)
+    st.table(df_tabela)
+    #st.dataframe(df_tabela, hide_index=True)
