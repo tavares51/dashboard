@@ -1,11 +1,21 @@
+import os
+import pyodbc
 import pandas as pd
+from datetime import datetime
+from dotenv import load_dotenv
 import logging
 
-# Configuração do logger
+
+load_dotenv()
+
+DB_SERVER = os.getenv("DB_SERVER")
+DB_DATABASE = os.getenv("DB_DATABASE")
+DB_USER = os.getenv("DB_USER")
+DB_PASSWORD = os.getenv("DB_PASSWORD")
+
 logger = logging.getLogger('error_logger')
 logger.setLevel(logging.ERROR)
 
-# Evita adicionar múltiplos handlers se o script for executado mais de uma vez
 if not logger.handlers:
     handler = logging.FileHandler('error.log')
     handler.setLevel(logging.ERROR)
@@ -23,9 +33,30 @@ def get_data(path="data/bronze/financeiro/dados_saida_financeiro.csv"):
         path (str): Caminho do arquivo CSV de SAIDA.
     """
     try:
-        df = pd.read_csv(path, sep=';', engine='python')
+        
+        QUERY = """
+            select 
+                NFI_NUMERO
+                , NFI_RAZAO
+                , NFI_CNPJ
+                , NFI_DATA_EMISSAO
+                , NFI_DATA_SAIDA
+                , NFI_VALOR_TOTAL_PRODUTO
+                , NFI_VALOR_TOTAL_PRODUTO_BRUTO
+                , NFI_VALOR_TOTAL_NOTA
+            from NOTA_FISCAL where NFI_TIPO = 0
+                order by NFI_DATA_EMISSAO desc
+        """
 
-        df_resumido = df.copy()
+        conn = pyodbc.connect(
+            f"DRIVER={{ODBC Driver 17 for SQL Server}};"
+            f"SERVER={DB_SERVER};"
+            f"DATABASE={DB_DATABASE};"
+            f"UID={DB_USER};"
+            f"PWD={DB_PASSWORD}"
+        )        
+        
+        df_resumido = pd.read_sql(QUERY, conn)
 
         datas = ['NFI_DATA_EMISSAO', 'NFI_DATA_SAIDA']
         for coluna in datas:
@@ -58,7 +89,7 @@ def get_data(path="data/bronze/financeiro/dados_saida_financeiro.csv"):
             day_name_map)
         df_resumido['DIA_SEMANA_SAIDA'] = df_resumido['DIA_SEMANA_SAIDA'].map(
             day_name_map)
-        
+
         return df_resumido
 
     except Exception as e:
