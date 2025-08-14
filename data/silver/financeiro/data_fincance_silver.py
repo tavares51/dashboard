@@ -1,4 +1,4 @@
-import os
+﻿import os
 import pyodbc
 import pandas as pd
 from datetime import datetime
@@ -47,14 +47,15 @@ def get_data(path="data/bronze/financeiro/dados_saida_financeiro.csv"):
             from NOTA_FISCAL where NFI_TIPO = 0
                 order by NFI_DATA_EMISSAO desc
         """
-
         conn = pyodbc.connect(
-            f"DRIVER={{ODBC Driver 17 for SQL Server}};"
-            f"SERVER={DB_SERVER};"
-            f"DATABASE={DB_DATABASE};"
-            f"UID={DB_USER};"
-            f"PWD={DB_PASSWORD}"
-        )        
+    	"DRIVER={SQL Server Native Client 11.0};"
+    	"SERVER=tcp:SERVIDOR,1433;"       # ou tcp:IP_INTERNO,PORTA
+    	"DATABASE=OMNIMULTI_NOVO;"
+    	"UID=BIOMAXCONSULTA;"
+    	"PWD=123321!Biomax;"
+    	"Network Library=DBMSSOCN;"
+    	"Connection Timeout=15;"
+        )       
         
         df_resumido = pd.read_sql(QUERY, conn)
 
