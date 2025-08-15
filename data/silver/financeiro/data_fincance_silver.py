@@ -44,7 +44,7 @@ def get_data(path="data/bronze/financeiro/dados_saida_financeiro.csv"):
                 NFI.NFI_VALOR_TOTAL_PRODUTO,
                 NFI.NFI_VALOR_TOTAL_PRODUTO_BRUTO,
                 NFI.NFI_VALOR_TOTAL_NOTA,
-                CTR.CTR_VALOR_TOTAL
+                NFI.NFI_VALOR_TOTAL_NOTA + CTR.CTR_VALOR_TOTAL as NFI_VALOR_TOTAL_NOTA
             FROM NOTA_FISCAL NFI
             OUTER APPLY (
                 SELECT TOP 1 CTR_VALOR_TOTAL
