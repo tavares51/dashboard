@@ -45,7 +45,7 @@ def get_data(path="data/bronze/financeiro/dados_saida_financeiro.csv"):
                 , NFI_VALOR_TOTAL_PRODUTO_BRUTO
                 , (CTR_VALOR_TOTAL + NFI_VALOR_TOTAL_NOTA) AS NFI_VALOR_TOTAL_NOTA
             from nota_fiscal
-                inner join conhecimento_transporte on ctr_dest_cpfcnpj = nfi_cnpj 
+                left join conhecimento_transporte on ctr_dest_cpfcnpj = nfi_cnpj 
                 and ctr_data_emissao = nfi_data_emissao and CTR_OPERACAO = 14
                 where nfi_tipo = 0 
                 order by nfi_data_emissao desc
