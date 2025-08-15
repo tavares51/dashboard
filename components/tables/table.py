@@ -24,7 +24,7 @@ def exibir_tabela_resumida(df):
 
 def exibir_saidas(df):
     df_tabela = df[['NFI_DATA_EMISSAO', 'NFI_CNPJ', 'NFI_RAZAO',
-                    'NFI_DATA_SAIDA', 'NFI_VALOR_TOTAL_NOTA']].copy()
+                    'NFI_DATA_SAIDA', 'VALOR_FINAL']].copy()
     df_tabela['NFI_DATA_EMISSAO'] = df_tabela['NFI_DATA_EMISSAO'].dt.strftime('%d/%m/%Y')
     df_tabela['NFI_DATA_SAIDA'] = df_tabela['NFI_DATA_SAIDA'].dt.strftime('%d/%m/%Y')
 
@@ -33,7 +33,7 @@ def exibir_saidas(df):
         'NFI_CNPJ': 'CNPJ',
         'NFI_RAZAO': 'Razão Social',
         'NFI_DATA_SAIDA': 'Saída',
-        'NFI_VALOR_TOTAL_NOTA': 'Valor da Nota (R$)'
+        'VALOR_FINAL': 'Valor da Nota (R$)'
     })
 
     st.subheader("Saídas")
