@@ -227,8 +227,8 @@ def grafico_financeiro_por_data(
     df["NFI_DATA_EMISSAO"] = pd.to_datetime(df["NFI_DATA_EMISSAO"]).dt.normalize()
 
     valor_col = (
-        "NFI_VALOR_TOTAL_NOTA"
-        if "NFI_VALOR_TOTAL_NOTA" in df.columns
+        "VALOR_FINAL"
+        if "VALOR_FINAL" in df.columns
         else "NFI_VALOR_TOTAL_PRODUTO"
     )
     df[valor_col] = pd.to_numeric(df[valor_col], errors="coerce").fillna(0)

@@ -138,7 +138,7 @@ def run_dashboard():
 
     total = 0.0
     if "NFI_VALOR_TOTAL_NOTA" in df_filtro_financeiro.columns:
-        total = float(pd.to_numeric(df_filtro_financeiro['NFI_VALOR_TOTAL_NOTA'], errors='coerce').sum())
+        total = float(pd.to_numeric(df_filtro_financeiro['VALOR_FINAL'], errors='coerce').sum())
     card('', f"Total Faturado: R$ {total:,.2f}")
 
     fig_data_financeiro = grafico_financeiro_por_data(df_filtro_financeiro)
