@@ -31,7 +31,7 @@ def get_data(path="data/bronze/financeiro/dados_saida_financeiro.csv"):
     """
     try:
         QUERY = """
-                SELECT
+                SELECT DISTINCT
                     NFI.NFI_NUMERO,
                     NFI.NFI_RAZAO,
                     NFI.NFI_CNPJ,
@@ -46,18 +46,8 @@ def get_data(path="data/bronze/financeiro/dados_saida_financeiro.csv"):
                     ON CTR.CTR_DEST_CPFCNPJ = NFI.NFI_CNPJ
                 AND CTR.CTR_DATA_EMISSAO = NFI.NFI_DATA_EMISSAO
                 WHERE NFI.NFI_TIPO = 0
-                AND NFI.NFI_DATA_EMISSAO >= DATEFROMPARTS(YEAR(GETDATE()) - 1, 1, 1)
+                AND NFI.NFI_DATA_EMISSAO >= DATEFROMPARTS(YEAR(GETDATE()), 1, 1)
                 AND NFI.NFI_DATA_EMISSAO <  CAST(GETDATE() AS date)
-                GROUP BY
-                    NFI.NFI_NUMERO,
-                    NFI.NFI_RAZAO,
-                    NFI.NFI_CNPJ,
-                    NFI.NFI_DATA_EMISSAO,
-                    NFI.NFI_DATA_SAIDA,
-                    NFI.NFI_VALOR_TOTAL_PRODUTO,
-                    NFI.NFI_VALOR_TOTAL_PRODUTO_BRUTO,
-                    NFI.NFI_VALOR_TOTAL_NOTA,
-                    CTR.CTR_VALOR_TOTAL
         """
         conn = pyodbc.connect(
             "DRIVER={SQL Server Native Client 11.0};"
