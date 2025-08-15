@@ -35,6 +35,16 @@ def get_data(path="data/bronze/financeiro/dados_saida_financeiro.csv"):
     try:
         
         QUERY = """
+            ;WITH CTR_AGG AS (
+                SELECT
+                    CTR_DEST_CPFCNPJ,
+                    CTR_DATA_EMISSAO,
+                    SUM(CTR_VALOR_TOTAL) AS CTR_VALOR_TOTAL_AGG
+                FROM CONHECIMENTO_TRANSPORTE
+                GROUP BY
+                    CTR_DEST_CPFCNPJ,
+                    CTR_DATA_EMISSAO
+            )
             SELECT
                 NFI.NFI_NUMERO,
                 NFI.NFI_RAZAO,
@@ -43,16 +53,12 @@ def get_data(path="data/bronze/financeiro/dados_saida_financeiro.csv"):
                 NFI.NFI_DATA_SAIDA,
                 NFI.NFI_VALOR_TOTAL_PRODUTO,
                 NFI.NFI_VALOR_TOTAL_PRODUTO_BRUTO,
-                NFI.NFI_VALOR_TOTAL_NOTA + CTR.CTR_VALOR_TOTAL as NFI_VALOR_TOTAL_NOTA
-            FROM NOTA_FISCAL NFI
-            OUTER APPLY (
-                SELECT TOP 1 CTR_VALOR_TOTAL
-                FROM CONHECIMENTO_TRANSPORTE
-                WHERE CTR_DEST_CPFCNPJ = NFI.NFI_CNPJ
-                AND CTR_DATA_EMISSAO = NFI.NFI_DATA_EMISSAO
-            ) CTR
-            WHERE NFI.NFI_TIPO = 0
-                order by nfi_data_emissao desc
+                ISNULL(CTR.CTR_VALOR_TOTAL_AGG, 0) + NFI.NFI_VALOR_TOTAL_NOTA AS NFI_VALOR_TOTAL_NOTA
+            FROM NOTA_FISCAL AS NFI
+            LEFT JOIN CTR_AGG AS CTR
+            ON CTR.CTR_DEST_CPFCNPJ = NFI.NFI_CNPJ
+            AND CTR.CTR_DATA_EMISSAO = NFI.NFI_DATA_EMISSAO
+            WHERE NFI.NFI_TIPO = 0;
 
         """
         conn = pyodbc.connect(
