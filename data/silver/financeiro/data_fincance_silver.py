@@ -35,19 +35,24 @@ def get_data(path="data/bronze/financeiro/dados_saida_financeiro.csv"):
     try:
         
         QUERY = """
-            select distinct
-                NFI_NUMERO
-                , NFI_RAZAO
-                , NFI_CNPJ
-                , NFI_DATA_EMISSAO
-                , NFI_DATA_SAIDA
-                , NFI_VALOR_TOTAL_PRODUTO
-                , NFI_VALOR_TOTAL_PRODUTO_BRUTO
-                , (CTR_VALOR_TOTAL + NFI_VALOR_TOTAL_NOTA) AS NFI_VALOR_TOTAL_NOTA
-            from nota_fiscal
-                left join conhecimento_transporte on ctr_dest_cpfcnpj = nfi_cnpj 
-                and ctr_data_emissao = nfi_data_emissao and CTR_OPERACAO = 14
-                where nfi_tipo = 0 
+            SELECT
+                NFI.NFI_NUMERO,
+                NFI.NFI_RAZAO,
+                NFI.NFI_CNPJ,
+                NFI.NFI_DATA_EMISSAO,
+                NFI.NFI_DATA_SAIDA,
+                NFI.NFI_VALOR_TOTAL_PRODUTO,
+                NFI.NFI_VALOR_TOTAL_PRODUTO_BRUTO,
+                NFI.NFI_VALOR_TOTAL_NOTA,
+                CTR.CTR_VALOR_TOTAL
+            FROM NOTA_FISCAL NFI
+            OUTER APPLY (
+                SELECT TOP 1 CTR_VALOR_TOTAL
+                FROM CONHECIMENTO_TRANSPORTE
+                WHERE CTR_DEST_CPFCNPJ = NFI.NFI_CNPJ
+                AND CTR_DATA_EMISSAO = NFI.NFI_DATA_EMISSAO
+            ) CTR
+            WHERE NFI.NFI_TIPO = 0
                 order by nfi_data_emissao desc
 
         """
