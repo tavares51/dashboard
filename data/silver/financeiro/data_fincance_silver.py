@@ -31,7 +31,7 @@ def get_data(path="data/bronze/financeiro/dados_saida_financeiro.csv"):
     """
     try:
         QUERY = """
-            SELECT
+            SELECT DISTINCT
                 NFI.NFI_NUMERO,
                 NFI.NFI_RAZAO,
                 NFI.NFI_CNPJ,
