@@ -101,7 +101,7 @@ def run_dashboard():
         index=0 if st.session_state["filtro_modo"] == "Período" else 1,
     )
 
-    col1, col2, col3, col4 = st.columns(4)
+    col1, col2, col3, col4, col5 = st.columns(5)
     with col1:
         periodo = st.selectbox(
             "Período",
@@ -162,8 +162,13 @@ def run_dashboard():
     with col4:
         clientes = st.multiselect(
             "Cliente", options=_safe_unique(df_financeiro, "NFI_RAZAO"))
+        
+    with col5:
+        fornecedores = st.multiselect(
+            "Fornecedor", options=_safe_unique(df, "CRE_PRODUTOR_NOME"))
 
-    df_filtrado = filtro_estoque(df, None, None, produtos, None)
+
+    df_filtrado = filtro_estoque(df, None, None, produtos, fornecedores)
     df_filtro_financeiro = filtro_financeiro(
         df_financeiro, None, None, clientes)
 
