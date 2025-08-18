@@ -204,57 +204,68 @@ def grafico_barras_produto(df, top_n=None):
 def grafico_financeiro_por_data(
     df: pd.DataFrame,
     *,
-    dias: int = 15,
+    dias: int | None = 15,
     data_filtro: str | datetime | None = None,
-) -> px.bar:
-    """
-    Gráfico vertical de faturamento por cliente.
-
-    ▸ Se `data_filtro` for informado → mostra somente esse dia.
-    ▸ Caso contrário                 → considera os últimos `dias`.
-
-    Colunas obrigatórias:
-        - NFI_DATA_EMISSAO
-        - NFI_RAZAO
-        - NFI_VALOR_TOTAL_NOTA ou NFI_VALOR_TOTAL_PRODUTO
-    """
-    if df.empty:
-        st.warning("DataFrame vazio.")
+):
+    # Requisitos mínimos
+    req = {"VALOR_FINAL", "NFI_RAZAO", "NFI_DATA_EMISSAO"}
+    if df is None or df.empty or any(c not in df.columns for c in req):
         return
 
-    # --- Normalização --- #
     df = df.copy()
-    df["NFI_DATA_EMISSAO"] = pd.to_datetime(df["NFI_DATA_EMISSAO"]).dt.normalize()
 
-    valor_col = (
-        "VALOR_FINAL"
-        if "VALOR_FINAL" in df.columns
-        else "NFI_VALOR_TOTAL_PRODUTO"
-    )
-    df[valor_col] = pd.to_numeric(df[valor_col], errors="coerce").fillna(0)
+    # Datas (emissão)
+    df["NFI_DATA_EMISSAO"] = pd.to_datetime(df["NFI_DATA_EMISSAO"], errors="coerce")
+    try:
+        df["NFI_DATA_EMISSAO"] = df["NFI_DATA_EMISSAO"].dt.tz_localize(None)
+    except Exception:
+        pass
+    df["NFI_DATA_EMISSAO"] = df["NFI_DATA_EMISSAO"].dt.normalize()
+
+    # Valor
+    df["VALOR_FINAL"] = pd.to_numeric(df["VALOR_FINAL"], errors="coerce").fillna(0)
 
     titulo = "Faturamento por Cliente"
-    if data_filtro:
-        data_filtro = pd.to_datetime(data_filtro).normalize()
-        df = df[df["NFI_DATA_EMISSAO"] == data_filtro]
-        
+
+    # Se dia específico, filtra por igualdade
+    if data_filtro is not None:
+        alvo = pd.to_datetime(data_filtro, errors="coerce")
+        if pd.isna(alvo):
+            return
+        try:
+            alvo = alvo.tz_localize(None)
+        except Exception:
+            pass
+        alvo = pd.to_datetime(alvo).normalize()
+        df = df[df["NFI_DATA_EMISSAO"] == alvo]
     else:
-        limite = (
-            datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
-            - timedelta(days=dias)
-        )
-        df = df[df["NFI_DATA_EMISSAO"] >= limite]
+        # Se vier 'dias', ancora no MÁXIMO da série (normalmente seu data_fim)
+        if dias is not None:
+            try:
+                dias_int = max(int(dias), 0)
+            except Exception:
+                dias_int = 15
+
+            if dias_int > 0:
+                ref = df["NFI_DATA_EMISSAO"].max()
+                if pd.isna(ref):
+                    return
+                ref = pd.to_datetime(ref).normalize()
+                limite = ref - timedelta(days=dias_int - 1)
+                df = df[df["NFI_DATA_EMISSAO"] >= limite]
+
 
     if df.empty:
-        st.warning("Nenhum dado encontrado para o filtro aplicado.")
         return
 
     dados = (
-        df.groupby("NFI_RAZAO", as_index=False)[valor_col]
-        .sum()
-        .rename(columns={"NFI_RAZAO": "Cliente", valor_col: "Valor_Total"})
-        .sort_values("Valor_Total", ascending=False)
+        df.groupby("NFI_RAZAO", as_index=False)["VALOR_FINAL"]
+          .sum()
+          .rename(columns={"NFI_RAZAO": "Cliente", "VALOR_FINAL": "Valor_Total"})
+          .sort_values("Valor_Total", ascending=False)
     )
+    if dados.empty or dados["Valor_Total"].sum() == 0:
+        return
 
     fig = px.bar(
         dados,
@@ -265,14 +276,15 @@ def grafico_financeiro_por_data(
         title=titulo,
         labels={"Valor_Total": "Valor Total (R$)", "Cliente": "Cliente"},
     )
-    fig.update_traces(texttemplate="R$ %{y:,.2f}", textposition="outside")
+    fig.update_traces(texttemplate="R$ %{y:,.2f}", textposition="outside", cliponaxis=False)
     fig.update_layout(
         xaxis_title="Cliente",
         yaxis_title="Valor Total (R$)",
         xaxis_tickangle=-15,
-        height=500,
-        margin=dict(l=0, r=0, t=50, b=0),
+        height=520,
+        margin=dict(l=0, r=0, t=60, b=0),
         showlegend=True,
+        uniformtext_minsize=8,
+        uniformtext_mode="hide",
     )
-
     return fig

@@ -6,8 +6,8 @@ def aplicar_filtros_topo(df: pd.DataFrame, data_especifica, periodo: str, client
     df_filtrado = df.copy()
 
     # Garantir datetime
-    df_filtrado['NFI_DATA_SAIDA'] = pd.to_datetime(df_filtrado['NFI_DATA_SAIDA'], errors='coerce')
-    df_filtrado['DATA_NORMALIZADA'] = df_filtrado['NFI_DATA_SAIDA'].dt.normalize()
+    df_filtrado['NFI_DATA_EMISSAO'] = pd.to_datetime(df_filtrado['NFI_DATA_EMISSAO'], errors='coerce')
+    df_filtrado['DATA_NORMALIZADA'] = df_filtrado['NFI_DATA_EMISSAO'].dt.normalize()
 
     hoje = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
 
@@ -34,7 +34,7 @@ def aplicar_filtros_topo(df: pd.DataFrame, data_especifica, periodo: str, client
             ]
         elif periodo == "Ano Atual":
             df_filtrado = df_filtrado[df_filtrado['DATA_NORMALIZADA'].dt.year == hoje.year]
-        elif periodo == "Todos":
+        elif periodo == "Todos" or periodo == "---":
             pass  # não filtra nada
 
     if cliente:

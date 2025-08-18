@@ -56,7 +56,7 @@ def aplicar_filtros_topo(
             ]
         elif periodo == "Ano Atual":
             df_filtrado = df_filtrado[df_filtrado['DATA_NORMALIZADA'].dt.year == hoje.year]
-        elif periodo == "Todos":
+        elif periodo == "Todos" or periodo == "---":
             pass  # Não aplica filtro de período
 
     # ---------- Filtro por produtos ----------
