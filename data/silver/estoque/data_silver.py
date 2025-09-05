@@ -11,7 +11,7 @@ load_dotenv()
 DB_SERVER = os.getenv("DB_SERVER")
 DB_DATABASE = os.getenv("DB_DATABASE")
 DB_USER = os.getenv("DB_USER")
-DB_PASSWORD = os.getenv("DB_PASSWORD")
+DB_PASSWORD = "123123!Biomax"#os.getenv("DB_PASSWORD")
 
 logger = logging.getLogger('error_logger')
 logger.setLevel(logging.ERROR)
@@ -57,14 +57,13 @@ def get_data(path="data/bronze/estoque/dados_entrada_estoque.csv"):
         """
 
         conn = pyodbc.connect(
-    	"DRIVER={SQL Server Native Client 11.0};"
-    	"SERVER=tcp:SERVIDOR,1433;"       # ou tcp:IP_INTERNO,PORTA
-    	"DATABASE=OMNIMULTI_NOVO;"
-    	"UID=BIOMAXCONSULTA;"
-    	"PWD=123321!Biomax;"
-    	"Network Library=DBMSSOCN;"
-    	"Connection Timeout=15;"
-        )
+            "DRIVER={ODBC Driver 17 for SQL Server};"
+            r"SERVER=SERVIDOR\SQLEXPRESS;"
+            "DATABASE=OMNIMULTI_NOVO;"
+            "UID=BIOMAXCONSULTA;"
+            "PWD=123123!Biomax;"
+            "TrustServerCertificate=yes;"
+)
 
         # df = pd.read_csv(path, sep=';', engine='python')
         df_resumido = pd.read_sql(QUERY, conn)
